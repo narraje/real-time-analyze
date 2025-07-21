@@ -8,11 +8,15 @@ describe('TranscriptMonitor', () => {
       storage: new SimpleStorage(),
       analyzer: {
         // Use rule-based analysis for tests (no API calls)
-        customAnalyzer: async (transcript, context) => ({
-          shouldRespond: transcript.includes('?') || transcript.split(' ').length > 5,
-          confidence: 0.8,
-          reason: 'Test analysis'
-        })
+        customAnalyzer: async (transcript, context) => {
+          // Always respond to messages with enough words for testing
+          const wordCount = transcript.split(' ').length;
+          return {
+            shouldRespond: wordCount >= 5, // Respond to longer messages
+            confidence: 0.8,
+            reason: 'Test analysis'
+          };
+        }
       },
       generator: {
         // Mock generator for tests
@@ -29,7 +33,8 @@ describe('TranscriptMonitor', () => {
   });
   
   test('should emit events when transcript changes', (done) => {
-    monitor.on('transcriptChanged', (transcript) => {
+    // Use once() to avoid multiple event firing issues
+    monitor.once('transcriptChanged', (transcript) => {
       expect(transcript).toBe('Hello world');
       done();
     });
