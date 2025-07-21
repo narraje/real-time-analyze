@@ -12,6 +12,7 @@
       "build": "tsc",
       "dev": "tsc --watch",
       "test": "jest",
+      "demo": "npx ts-node examples/test-demo.ts",
       "prepublishOnly": "npm run build && npm test"
     },
     "keywords": [
