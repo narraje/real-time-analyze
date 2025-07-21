@@ -84,15 +84,27 @@ describe('TranscriptMonitor', () => {
   test('should maintain conversation history', async () => {
     monitor.start();
     
-    await monitor.updateTranscript('First message that is long enough');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for first response to be generated
+    const firstResponse = new Promise(resolve => {
+      monitor.once('responseGenerated', resolve);
+    });
     
-    await monitor.updateTranscript('Second message that is long enough');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await monitor.updateTranscript('First message that is long enough to trigger');
+    await firstResponse;
+    
+    // Wait for second response to be generated
+    const secondResponse = new Promise(resolve => {
+      monitor.once('responseGenerated', resolve);
+    });
+    
+    await monitor.updateTranscript('Second message that is long enough to trigger');
+    await secondResponse;
     
     const history = monitor.getHistory();
     expect(history.length).toBe(4); // 2 user + 2 assistant messages
     expect(history[0].role).toBe('user');
     expect(history[1].role).toBe('assistant');
+    expect(history[2].role).toBe('user');
+    expect(history[3].role).toBe('assistant');
   });
 });
