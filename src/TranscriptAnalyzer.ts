@@ -67,9 +67,38 @@ Return JSON: { "shouldRespond": boolean, "confidence": 0-1, "reason": "brief exp
         throw new Error(`Unknown provider: ${this.config.provider}`);
       }
       
-      return JSON.parse(response);
+      return this.parseAndValidateResponse(response, transcript, context);
     } catch (error) {
       // Fallback to rule-based
+      return this.ruleBasedAnalysis(transcript, context);
+    }
+  }
+
+  private parseAndValidateResponse(response: string, transcript: string, context: AnalysisContext): AnalysisResult {
+    try {
+      const parsed = JSON.parse(response);
+      
+      // Validate required fields and types
+      if (typeof parsed.shouldRespond !== 'boolean') {
+        throw new Error('Invalid shouldRespond field');
+      }
+      
+      if (typeof parsed.confidence !== 'number' || parsed.confidence < 0 || parsed.confidence > 1) {
+        throw new Error('Invalid confidence field');
+      }
+      
+      if (typeof parsed.reason !== 'string' || parsed.reason.length === 0) {
+        throw new Error('Invalid reason field');
+      }
+      
+      return {
+        shouldRespond: parsed.shouldRespond,
+        confidence: Math.max(0, Math.min(1, parsed.confidence)), // Clamp to 0-1 range
+        reason: parsed.reason.substring(0, 200) // Limit reason length
+      };
+    } catch (error) {
+      // If parsing fails, fall back to rule-based analysis
+      console.warn('AI response parsing failed, using rule-based fallback:', error);
       return this.ruleBasedAnalysis(transcript, context);
     }
   }
@@ -117,7 +146,7 @@ Return JSON: { "shouldRespond": boolean, "confidence": 0-1, "reason": "brief exp
       })
     });
     
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.choices[0].message.content;
   }
 
@@ -136,7 +165,7 @@ Return JSON: { "shouldRespond": boolean, "confidence": 0-1, "reason": "brief exp
       })
     });
     
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.content[0].text;
   }
 }

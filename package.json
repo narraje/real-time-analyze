@@ -22,7 +22,7 @@
       "claude",
       "chatbot"
     ],
-    "author": "Your Name",
+    "author": "Nico Arraje",
     "license": "MIT",
     "dependencies": {
       "events": "^3.3.0"

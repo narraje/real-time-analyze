@@ -3,6 +3,8 @@ export interface MonitorConfig {
     analyzer?: AnalyzerConfig;
     generator?: GeneratorConfig;
     debounceMs?: number;
+    pollingIntervalMs?: number;
+    maxPollingIntervalMs?: number;
   }
   
   export interface StorageInterface {

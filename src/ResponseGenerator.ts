@@ -63,7 +63,7 @@ export class ResponseGenerator {
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
     
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.choices[0].message.content;
   }
 
@@ -92,7 +92,7 @@ export class ResponseGenerator {
       throw new Error(`Anthropic API error: ${response.statusText}`);
     }
     
-    const data = await response.json();
+    const data = await response.json() as any;
     return data.content[0].text;
   }
 }

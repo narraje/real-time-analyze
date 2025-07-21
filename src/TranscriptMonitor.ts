@@ -23,7 +23,9 @@ export class TranscriptMonitor extends EventEmitter {
       storage: config.storage || this.createDefaultStorage(),
       analyzer: config.analyzer || {},
       generator: config.generator || {},
-      debounceMs: config.debounceMs ?? 1000
+      debounceMs: config.debounceMs ?? 1000,
+      pollingIntervalMs: config.pollingIntervalMs ?? 500,
+      maxPollingIntervalMs: config.maxPollingIntervalMs ?? 5000
     };
     
     this.storage = this.config.storage;
@@ -60,15 +62,37 @@ export class TranscriptMonitor extends EventEmitter {
       
       this.once('stop', unsubscribe);
     } else {
-      // Fall back to polling
-      const pollInterval = setInterval(async () => {
-        const transcript = await this.storage.get(transcriptKey);
-        if (transcript !== this.lastTranscript) {
-          this.handleTranscriptChange(transcript);
-        }
-      }, 100);
+      // Fall back to adaptive polling
+      let currentInterval = this.config.pollingIntervalMs;
+      let pollTimeout: NodeJS.Timeout;
       
-      this.once('stop', () => clearInterval(pollInterval));
+      const poll = async () => {
+        try {
+          const transcript = await this.storage.get(transcriptKey);
+          if (transcript !== this.lastTranscript) {
+            this.handleTranscriptChange(transcript);
+            // Reset to faster polling when changes detected
+            currentInterval = this.config.pollingIntervalMs;
+          } else {
+            // Gradually slow down polling when no changes
+            currentInterval = Math.min(
+              currentInterval * 1.5,
+              this.config.maxPollingIntervalMs
+            );
+          }
+        } catch (error) {
+          this.emit('error', error);
+        }
+        
+        pollTimeout = setTimeout(poll, currentInterval);
+      };
+      
+      // Start polling
+      poll();
+      
+      this.once('stop', () => {
+        if (pollTimeout) clearTimeout(pollTimeout);
+      });
     }
     
     this.emit('started');
@@ -93,8 +117,10 @@ export class TranscriptMonitor extends EventEmitter {
   }
 
   private async _processTranscript(transcript: string, silenceDuration: number) {
-    if (this.isProcessing || !transcript.trim()) return;
+    if (!transcript.trim()) return;
     
+    // Atomic check-and-set to prevent race conditions
+    if (this.isProcessing) return;
     this.isProcessing = true;
     
     try {
