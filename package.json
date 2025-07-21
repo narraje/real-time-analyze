@@ -1,0 +1,40 @@
+{
+    "name": "transcript-monitor-agent",
+    "version": "1.0.0",
+    "description": "Simple transcript monitoring and intelligent response generation",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+      "dist",
+      "README.md"
+    ],
+    "scripts": {
+      "build": "tsc",
+      "dev": "tsc --watch",
+      "test": "jest",
+      "prepublishOnly": "npm run build && npm test"
+    },
+    "keywords": [
+      "transcript",
+      "ai",
+      "monitoring",
+      "gpt",
+      "claude",
+      "chatbot"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "dependencies": {
+      "events": "^3.3.0"
+    },
+    "devDependencies": {
+      "@types/node": "^20.0.0",
+      "typescript": "^5.0.0",
+      "jest": "^29.0.0",
+      "@types/jest": "^29.0.0",
+      "ts-jest": "^29.0.0"
+    },
+    "engines": {
+      "node": ">=16.0.0"
+    }
+  }
