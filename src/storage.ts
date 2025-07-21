@@ -40,7 +40,11 @@ export class SimpleStorage implements StorageInterface {
 
 // Browser storage adapter
 export class BrowserStorage implements StorageInterface {
-  constructor(private storage: Storage = localStorage) {}
+  constructor(private storage: any = typeof localStorage !== 'undefined' ? localStorage : null) {
+    if (!this.storage) {
+      throw new Error('Browser storage not available');
+    }
+  }
 
   async get(key: string): Promise<string> {
     return this.storage.getItem(key) || '';
@@ -50,9 +54,11 @@ export class BrowserStorage implements StorageInterface {
     this.storage.setItem(key, value);
     
     // Dispatch custom event for same-window updates
-    window.dispatchEvent(new CustomEvent('transcript-update', {
-      detail: { key, value }
-    }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('transcript-update', {
+        detail: { key, value }
+      }));
+    }
   }
 
   subscribe(key: string, callback: (value: string) => void): () => void {
@@ -62,10 +68,15 @@ export class BrowserStorage implements StorageInterface {
       }
     };
     
-    window.addEventListener('transcript-update', handler);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('transcript-update', handler);
+      
+      return () => {
+        window.removeEventListener('transcript-update', handler);
+      };
+    }
     
-    return () => {
-      window.removeEventListener('transcript-update', handler);
-    };
+    // Return no-op unsubscribe function for non-browser environments
+    return () => {};
   }
 }

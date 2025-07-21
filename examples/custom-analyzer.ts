@@ -1,4 +1,4 @@
-import { TranscriptMonitor } from 'transcript-monitor-agent';
+import { TranscriptMonitor } from '../src/index';
 
 // Custom analysis logic
 const monitor = new TranscriptMonitor({

@@ -1,4 +1,4 @@
-import { TranscriptMonitor, SimpleStorage } from 'transcript-monitor-agent';
+import { TranscriptMonitor, SimpleStorage } from '../src/index';
 
 // Basic setup with OpenAI
 const monitor = new TranscriptMonitor({
@@ -50,39 +50,3 @@ setTimeout(() => {
 setTimeout(() => {
   monitor.updateTranscript('What can you help me with?');
 }, 3000);
-
-// examples/with-deepgram.ts
-import { TranscriptMonitor, BrowserStorage } from 'transcript-monitor-agent';
-// import { Deepgram } from '@deepgram/sdk';
-
-const monitor = new TranscriptMonitor({
-  storage: new BrowserStorage(), // Uses localStorage
-  
-  analyzer: {
-    provider: 'openai',
-    apiKey: process.env.OPENAI_API_KEY,
-    minWords: 3
-  },
-  
-  generator: {
-    provider: 'openai',
-    apiKey: process.env.OPENAI_API_KEY
-  }
-});
-
-monitor.start();
-
-// Connect to Deepgram
-/*
-const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY);
-const live = deepgram.transcription.live({
-  punctuate: true,
-  interim_results: true
-});
-
-live.on('transcript', (data) => {
-  if (data.transcript) {
-    monitor.updateTranscript(data.transcript);
-  }
-});
-*/
