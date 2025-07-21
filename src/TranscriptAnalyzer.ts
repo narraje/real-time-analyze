@@ -24,6 +24,19 @@ export class TranscriptAnalyzer {
       };
     }
     
+    // Check for immediate response triggers BEFORE silence duration
+    const hasQuestion = transcript.includes('?');
+    const hasGreeting = /^(hi|hello|hey)/i.test(transcript);
+    
+    if (hasQuestion || hasGreeting) {
+      return {
+        shouldRespond: true,
+        confidence: 0.9,
+        reason: hasQuestion ? 'Question detected' : 'Greeting detected'
+      };
+    }
+    
+    // Only check silence duration for non-obvious cases
     if (context.silenceDuration < (this.config.maxSilenceMs || 1500)) {
       return {
         shouldRespond: false,

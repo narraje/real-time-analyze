@@ -105,15 +105,14 @@ export class TranscriptMonitor extends EventEmitter {
 
   private handleTranscriptChange(transcript: string) {
     const now = Date.now();
-    const silenceDuration = now - this.lastChangeTime;
     
     this.lastChangeTime = now;
     this.lastTranscript = transcript;
     
     this.emit('transcriptChanged', transcript);
     
-    // Process with debounce
-    this.processTranscript(transcript, silenceDuration);
+    // Process with debounce - silence duration calculated at processing time
+    this.processTranscript(transcript, 0); // Will be recalculated in _processTranscript
   }
 
   private async _processTranscript(transcript: string, silenceDuration: number) {
@@ -124,11 +123,15 @@ export class TranscriptMonitor extends EventEmitter {
     this.isProcessing = true;
     
     try {
+      // Calculate actual silence duration at processing time
+      const now = Date.now();
+      const actualSilenceDuration = now - this.lastChangeTime;
+      
       // Analyze if we should respond
       const context = {
         transcript,
         previousTranscript: this.lastTranscript,
-        silenceDuration,
+        silenceDuration: actualSilenceDuration,
         conversationHistory: this.conversationHistory
       };
       
