@@ -1,6 +1,12 @@
 # transcript-monitor-agent
 
-Simple transcript monitoring and intelligent response generation
+"Transcript-monitor-agent" is a powerful tool that enables real-time transcript monitoring and leverages AI for intelligent response generation. It's designed to enhance your interaction processes, providing a seamless and smart communication experience.
+## Recent Updates
+
+- Comprehensive class documentation has been added to `TranscriptMonitor` for better understanding of the class's functionality and usage.
+- The `TranscriptMonitor` class now features enhanced code readability, making it easier for developers to understand and modify.
+- The recent updates have significantly improved the maintainability of the code, making future changes and enhancements more efficient.
+
 
 ## What it does
 
@@ -249,9 +255,6 @@ new TranscriptMonitor({
     contextFile: string, // Optional context file from analyzer settings
   },
   debounceMs: number, // Debounce delay (default: 1000ms)
-  name: string, // Optional name for the monitor to recognize when being addressed
-  role: string, // Optional role description (e.g., "teacher in a classroom of 3rd graders")
-  contextFile: string, // Optional path to file or content string with additional context
 });
 ```
 
