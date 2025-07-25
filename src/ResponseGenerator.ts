@@ -1,4 +1,5 @@
 import { GeneratorConfig, Message } from './types';
+import * as fs from 'fs/promises';
 
 export class ResponseGenerator {
   private config: GeneratorConfig;
@@ -12,7 +13,7 @@ export class ResponseGenerator {
     };
   }
 
-  async generate(transcript: string, history: Message[]): Promise<string> {
+  async generate(transcript: string, history: Message[], options?: { name?: string; role?: string; contextFile?: string }): Promise<string> {
     // Use custom generator if provided
     if (this.config.customGenerator) {
       return this.config.customGenerator(transcript, history);
@@ -23,10 +24,46 @@ export class ResponseGenerator {
       throw new Error('API key required for response generation');
     }
     
+    // Build system prompt with additional context if available
+    let systemPrompt = this.config.systemPrompt || '';
+    
+    // Add role information to system prompt if provided
+    if (options?.role) {
+      systemPrompt += `\n\nYou are acting as: ${options.role}`;
+    }
+    
+    // Add name to system prompt if provided
+    if (options?.name && options.name.trim() !== '') {
+      systemPrompt += `\n\nYou should respond when directly addressed as "${options.name}".`;
+    }
+    
+    // Load and add context file content if provided
+    if (options?.contextFile) {
+      try {
+        // Check if it's a file path or direct content
+        if (options.contextFile.includes('\n') || !options.contextFile.includes('/')) {
+          // Direct content
+          systemPrompt += `\n\nAdditional context: ${options.contextFile}`;
+        } else {
+          // Try to read from file
+          try {
+            const contextContent = await fs.readFile(options.contextFile, 'utf-8');
+            systemPrompt += `\n\nAdditional context: ${contextContent}`;
+          } catch (error) {
+            console.warn(`Could not read context file: ${options.contextFile}`, error);
+            // Still include the context filename as a reference
+            systemPrompt += `\n\nContext reference: ${options.contextFile}`;
+          }
+        }
+      } catch (error) {
+        console.warn('Error processing context file', error);
+      }
+    }
+    
     const messages = [
-      ...(this.config.systemPrompt ? [{
+      ...(systemPrompt ? [{
         role: 'system' as const,
-        content: this.config.systemPrompt
+        content: systemPrompt
       }] : []),
       ...history.map(msg => ({
         role: msg.role,

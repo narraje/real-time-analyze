@@ -5,6 +5,21 @@ export interface MonitorConfig {
     debounceMs?: number;
     pollingIntervalMs?: number;
     maxPollingIntervalMs?: number;
+    /**
+     * Optional name for the monitor that can be referenced in transcripts.
+     * This allows the monitor to recognize when it's being addressed directly.
+     */
+    name?: string;
+    /**
+     * Optional role description for the monitor, influencing how it analyzes and responds.
+     * Example: 'teacher in a classroom of 3rd graders'
+     */
+    role?: string;
+    /**
+     * Optional path or content for additional context about the conversation environment.
+     * Provides background information to better inform analysis and generation.
+     */
+    contextFile?: string;
   }
   
   export interface StorageInterface {
@@ -37,6 +52,18 @@ export interface MonitorConfig {
     previousTranscript: string;
     silenceDuration: number;
     conversationHistory: Message[];
+    /**
+     * Optional name of the monitor that can be referenced in transcripts
+     */
+    name?: string;
+    /**
+     * Optional role description affecting analysis behavior
+     */
+    role?: string;
+    /**
+     * Optional context file to provide additional information
+     */
+    contextFile?: string;
   }
   
   export interface AnalysisResult {

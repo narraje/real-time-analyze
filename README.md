@@ -169,6 +169,9 @@ new TranscriptMonitor({
     customGenerator: Function, // Your own generation logic
   },
   debounceMs: number, // Debounce delay (default: 1000ms)
+  name: string, // Optional name for the monitor to recognize when being addressed
+  role: string, // Optional role description (e.g., "teacher in a classroom of 3rd graders")
+  contextFile: string, // Optional path to file or content string with additional context
 });
 ```
 
