@@ -1,11 +1,13 @@
 # transcript-monitor-agent
 
-"Transcript-monitor-agent" is a powerful tool that enables real-time transcript monitoring and leverages AI for intelligent response generation. It's designed to enhance your interaction processes, providing a seamless and smart communication experience.
+Unleash the power of smart communication with "transcript-monitor-agent", a robust package designed to efficiently monitor transcripts and generate intelligent responses. It's a seamless blend of simplicity and advanced technology, set to revolutionize your interaction dynamics.
 ## Recent Updates
 
-- Comprehensive class documentation has been added to `TranscriptMonitor` for better understanding of the class's functionality and usage.
-- The `TranscriptMonitor` class now features enhanced code readability, making it easier for developers to understand and modify.
-- The recent updates have significantly improved the maintainability of the code, making future changes and enhancements more efficient.
+- A new feature has been added: Named role context example. This demonstrates how to monitor transcripts using persona settings.
+- The named role context example also showcases the use of TypeScript in managing and monitoring transcripts.
+- The package now supports transcript monitoring with persona settings, allowing for more personalized and efficient tracking.
+- The latest commit (f7e7ac2) brings significant improvements in transcript monitoring functionality.
+- The update enhances user interaction and experience with the package by providing more detailed control over transcripts.
 
 
 ## What it does
