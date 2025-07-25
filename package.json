@@ -1,41 +1,41 @@
 {
     "name": "transcript-monitor-agent",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Simple transcript monitoring and intelligent response generation",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
-      "dist",
-      "README.md"
+        "dist",
+        "README.md"
     ],
     "scripts": {
-      "build": "tsc",
-      "dev": "tsc --watch",
-      "test": "jest",
-      "demo": "npx ts-node examples/test-demo.ts",
-      "prepublishOnly": "npm run build && npm test"
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "test": "jest",
+        "demo": "npx ts-node examples/test-demo.ts",
+        "prepublishOnly": "npm run build && npm test"
     },
     "keywords": [
-      "transcript",
-      "ai",
-      "monitoring",
-      "gpt",
-      "claude",
-      "chatbot"
+        "transcript",
+        "ai",
+        "monitoring",
+        "gpt",
+        "claude",
+        "chatbot"
     ],
     "author": "Nico Arraje",
     "license": "MIT",
     "dependencies": {
-      "events": "^3.3.0"
+        "events": "^3.3.0"
     },
     "devDependencies": {
-      "@types/node": "^20.0.0",
-      "typescript": "^5.0.0",
-      "jest": "^29.0.0",
-      "@types/jest": "^29.0.0",
-      "ts-jest": "^29.0.0"
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0",
+        "jest": "^29.0.0",
+        "@types/jest": "^29.0.0",
+        "ts-jest": "^29.0.0"
     },
     "engines": {
-      "node": ">=16.0.0"
+        "node": ">=16.0.0"
     }
-  }
+}
