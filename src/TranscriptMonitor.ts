@@ -4,6 +4,18 @@ import { ResponseGenerator } from './ResponseGenerator';
 import { debounce, retry } from './utils';
 import { MonitorConfig, Message, StorageInterface } from './types';
 
+/**
+ * TranscriptMonitor - The main class that orchestrates real-time transcript monitoring and response generation
+ * 
+ * This class handles: 
+ * - Receiving and processing transcript updates
+ * - Debouncing transcript changes
+ * - Analyzing when a response is needed
+ * - Generating intelligent AI responses
+ * - Maintaining conversation history
+ * - Emitting relevant events for integration
+ */
+
 export class TranscriptMonitor extends EventEmitter {
   private config: Required<MonitorConfig>;
   private analyzer: TranscriptAnalyzer;
