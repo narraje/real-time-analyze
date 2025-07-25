@@ -1,0 +1,45 @@
+name: Update README with OpenAI Enhancement
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'examples/**'
+      - 'package.json'
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Generate README
+        run: node .github/scripts/generate-readme.js
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        
+      - name: Commit changes if README is modified
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+          else
+            git add README.md
+            git commit -m "docs: update README.md [skip ci]"
+            git push
+          fi

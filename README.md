@@ -1,6 +1,6 @@
-# Transcript Monitor Agent
+# transcript-monitor-agent
 
-A simple npm package that monitors transcripts from any source and intelligently generates responses using AI.
+Simple transcript monitoring and intelligent response generation
 
 ## What it does
 
@@ -19,34 +19,58 @@ npm install transcript-monitor-agent
 ## Quick Start
 
 ```javascript
-import { TranscriptMonitor } from "transcript-monitor-agent";
+import { TranscriptMonitor, SimpleStorage } from '../src/index';
 
+// Basic setup with OpenAI
 const monitor = new TranscriptMonitor({
+  storage: new SimpleStorage(),
+  
   analyzer: {
-    provider: "openai",
-    apiKey: "your-openai-key",
-    minWords: 5, // Don't respond to very short inputs
-    maxSilenceMs: 1500, // Wait 1.5s of "silence" before responding
+    provider: 'openai',
+    apiKey: process.env.OPENAI_API_KEY,
+    minWords: 5,
+    maxSilenceMs: 1500
   },
+  
   generator: {
-    provider: "openai",
-    apiKey: "your-openai-key",
-    model: "gpt-4o",
-    systemPrompt: "You are a helpful assistant.",
+    provider: 'openai',
+    apiKey: process.env.OPENAI_API_KEY,
+    model: 'gpt-4o',
+    systemPrompt: 'You are a helpful assistant. Be concise.',
+    temperature: 0.7
   },
+  
+  debounceMs: 1000 // Wait 1 second before processing
 });
 
-// Listen for responses
-monitor.on("responseGenerated", (response) => {
-  console.log("AI says:", response);
-  // Send to TTS, display in UI, etc.
+// Listen for events
+monitor.on('transcriptChanged', (transcript) => {
+  console.log('📝 Transcript:', transcript);
+});
+
+monitor.on('analysisComplete', (result) => {
+  console.log('🔍 Analysis:', result);
+});
+
+monitor.on('responseGenerated', (response) => {
+  console.log('🤖 Response:', response);
+});
+
+monitor.on('error', (error) => {
+  console.error('❌ Error:', error);
 });
 
 // Start monitoring
 monitor.start();
 
-// Send transcripts from ANY source
-monitor.updateTranscript("Hello, how are you?");
+// Simulate transcript updates from any source
+setTimeout(() => {
+  monitor.updateTranscript('Hello, how are you?');
+}, 1000);
+
+setTimeout(() => {
+  monitor.updateTranscript('What can you help me with?');
+}, 3000);
 ```
 
 ## Core Concepts
@@ -81,24 +105,51 @@ Generates **what** to respond:
 ### With Deepgram
 
 ```javascript
-import { TranscriptMonitor } from "transcript-monitor-agent";
+import { TranscriptMonitor, BrowserStorage } from '../src/index';
+// import { Deepgram } from '@deepgram/sdk';
 
 const monitor = new TranscriptMonitor({
+  storage: new BrowserStorage(), // Uses localStorage
+  
   analyzer: {
-    provider: "openai",
-    apiKey: "key",
-    minWords: 3,
+    provider: 'openai',
+    apiKey: process.env.OPENAI_API_KEY,
+    minWords: 3
   },
+  
   generator: {
-    provider: "openai",
-    apiKey: "key",
-  },
+    provider: 'openai',
+    apiKey: process.env.OPENAI_API_KEY,
+    model: 'gpt-4o',
+    systemPrompt: 'You are a helpful assistant.',
+    temperature: 0.7
+  }
 });
 
-// Deepgram streaming
-deepgram.on("transcript", (data) => {
-  monitor.updateTranscript(data.transcript);
+// Listen for responses
+monitor.on('responseGenerated', (response) => {
+  console.log('🤖 AI Response:', response);
+  // Send to TTS, display in UI, etc.
 });
+
+// Start monitoring
+monitor.start();
+
+// Connect to Deepgram (uncomment when you have Deepgram installed)
+/*
+const deepgram = new Deepgram(process.env.DEEPGRAM_API_KEY);
+const live = deepgram.transcription.live({
+  punctuate: true,
+  interim_results: true
+});
+
+live.on('transcript', (data) => {
+  if (data.transcript) {
+    monitor.updateTranscript(data.transcript);
+  }
+});
+*/
+
 ```
 
 ### With Web Speech API
@@ -115,25 +166,48 @@ recognition.onresult = (event) => {
 ### Custom Analysis Logic
 
 ```javascript
+import { TranscriptMonitor } from '../src/index';
+
+// Custom analysis logic
 const monitor = new TranscriptMonitor({
   analyzer: {
     customAnalyzer: async (transcript, context) => {
-      // Your logic here
-      if (transcript.includes("?")) {
+      // Your custom logic here
+      const hasQuestion = transcript.includes('?');
+      const isLongEnough = transcript.split(' ').length > 5;
+      const hasBeenSilent = context.silenceDuration > 2000;
+      
+      // Custom decision logic
+      if (hasQuestion) {
         return {
           shouldRespond: true,
           confidence: 0.95,
-          reason: "Question detected",
+          reason: 'Direct question'
         };
       }
-
+      
+      if (isLongEnough && hasBeenSilent) {
+        return {
+          shouldRespond: true,
+          confidence: 0.7,
+          reason: 'Complete thought'
+        };
+      }
+      
       return {
         shouldRespond: false,
         confidence: 0.3,
-        reason: "Not ready",
+        reason: 'Waiting for more input'
       };
-    },
+    }
   },
+  
+  generator: {
+    provider: 'anthropic',
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    model: 'claude-3-sonnet-20240229',
+    systemPrompt: 'Be helpful and concise.'
+  }
 });
 ```
 
@@ -158,6 +232,9 @@ new TranscriptMonitor({
     minWords: number, // Minimum words before considering response
     maxSilenceMs: number, // Max silence duration to wait
     customAnalyzer: Function, // Your own analysis logic
+    name: string, // Optional name for identifying when addressed directly
+    role: string, // Optional role to influence analysis behavior
+    contextFile: string, // Optional path to context file
   },
   generator: {
     provider: "openai" | "anthropic" | "custom",
@@ -167,6 +244,9 @@ new TranscriptMonitor({
     temperature: number,
     maxTokens: number,
     customGenerator: Function, // Your own generation logic
+    name: string, // Optional name from analyzer settings
+    role: string, // Optional role from analyzer settings
+    contextFile: string, // Optional context file from analyzer settings
   },
   debounceMs: number, // Debounce delay (default: 1000ms)
 });
