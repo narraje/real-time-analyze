@@ -9,6 +9,10 @@ on:
       - 'examples/**'
       - 'package.json'
 
+# Explicitly set permissions for the GITHUB_TOKEN
+permissions:
+  contents: write  # Needed for pushing changes to the repository
+
 jobs:
   update-readme:
     runs-on: ubuntu-latest
@@ -33,15 +37,13 @@ jobs:
         
       - name: Commit changes if README is modified
         run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
           if git diff --quiet README.md; then
             echo "No changes to README.md"
           else
             git add README.md
             git commit -m "docs: update README.md [skip ci]"
-            git push https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+            git push
           fi
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
