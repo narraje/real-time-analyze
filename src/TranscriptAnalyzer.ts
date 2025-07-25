@@ -1,5 +1,18 @@
 import { AnalyzerConfig, AnalysisContext, AnalysisResult } from './types';
 
+/**
+ * TranscriptAnalyzer - Analyzes transcript content to determine if and when a response is needed
+ * 
+ * The analyzer evaluates transcripts based on multiple factors including:
+ * - Content relevance and question detection
+ * - Named addressing (when a name parameter is provided)
+ * - Silence duration thresholds
+ * - Word count minimums
+ * - Context-specific rules based on role or additional context
+ * 
+ * The analyzer supports multiple AI providers and can be extended with custom analysis logic.
+ */
+
 export class TranscriptAnalyzer {
   private config: AnalyzerConfig;
 
@@ -12,6 +25,14 @@ export class TranscriptAnalyzer {
     };
   }
 
+  /**
+   * Analyzes transcript content to determine if a response should be generated
+   * 
+   * @param transcript - The current transcript text to analyze
+   * @param context - Additional context for the analysis including conversation history,
+   *                  name recognition, role-specific behavior, and additional context
+   * @returns Promise resolving to an AnalysisResult with response recommendation
+   */
   async analyze(transcript: string, context: AnalysisContext): Promise<AnalysisResult> {
     // Basic checks
     const wordCount = transcript.split(/\s+/).filter(w => w.length > 0).length;
