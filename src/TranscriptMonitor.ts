@@ -25,7 +25,10 @@ export class TranscriptMonitor extends EventEmitter {
       generator: config.generator || {},
       debounceMs: config.debounceMs ?? 1000,
       pollingIntervalMs: config.pollingIntervalMs ?? 500,
-      maxPollingIntervalMs: config.maxPollingIntervalMs ?? 5000
+      maxPollingIntervalMs: config.maxPollingIntervalMs ?? 5000,
+      name: config.name || '',
+      role: config.role || '',
+      contextFile: config.contextFile || ''
     };
     
     this.storage = this.config.storage;
@@ -132,7 +135,10 @@ export class TranscriptMonitor extends EventEmitter {
         transcript,
         previousTranscript: this.lastTranscript,
         silenceDuration: actualSilenceDuration,
-        conversationHistory: this.conversationHistory
+        conversationHistory: this.conversationHistory,
+        name: this.config.name,
+        role: this.config.role,
+        contextFile: this.config.contextFile
       };
       
       const analysis = await retry(() => 
@@ -145,7 +151,15 @@ export class TranscriptMonitor extends EventEmitter {
       if (analysis.shouldRespond) {
         // Generate response
         const response = await retry(() => 
-          this.generator.generate(transcript, this.conversationHistory),
+          this.generator.generate(
+            transcript, 
+            this.conversationHistory, 
+            {
+              name: this.config.name,
+              role: this.config.role,
+              contextFile: this.config.contextFile
+            }
+          ),
           3
         );
         
