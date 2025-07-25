@@ -10,6 +10,11 @@ on:
       - 'package-lock.json'
   # Allow manual triggering
   workflow_dispatch:
+    inputs:
+      version-type:
+        description: 'Version type (patch, minor, major)'
+        required: false
+        default: 'patch'
 
 jobs:
   publish:
@@ -23,6 +28,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history and tags
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Automated version bump based on commit messages
+      - name: Automated Version Bump
+        id: version-bump
+        uses: phips28/gh-action-bump-version@master
+        with:
+          tag-prefix: 'v'
+          minor-wording: 'feat,feature,minor'
+          major-wording: 'BREAKING CHANGE,major'
+          patch-wording: 'fix,patch,docs,chore,refactor,test,style'
+          rc-wording: 'alpha,beta,rc'
+          default: ${{ github.event.inputs.version-type || 'patch' }}
+          commit-message: 'ci: version bump to {{version}} [skip ci]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
