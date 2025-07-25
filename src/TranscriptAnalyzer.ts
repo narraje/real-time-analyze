@@ -60,11 +60,39 @@ export class TranscriptAnalyzer {
   }
 
   private async aiAnalysis(transcript: string, context: AnalysisContext): Promise<AnalysisResult> {
+    // Build detailed context for analysis
+    let analysisContext = `${context.silenceDuration}ms of silence, ${context.conversationHistory.length} previous messages`;
+    
+    // Add name-based context - check if monitor is being directly addressed
+    if (context.name && context.name.trim() !== '') {
+      const nameLower = context.name.toLowerCase().trim();
+      const transcriptLower = transcript.toLowerCase();
+      
+      // Check if name is mentioned in transcript
+      const isAddressed = transcriptLower.includes(nameLower);
+      analysisContext += `\nMonitor name: "${context.name}", directly addressed: ${isAddressed}`;
+    }
+    
+    // Add role-based context to influence analysis
+    if (context.role && context.role.trim() !== '') {
+      analysisContext += `\nMonitor role: ${context.role}`;
+    }
+    
+    // Add context file information if available
+    if (context.contextFile && context.contextFile.trim() !== '') {
+      const contextPreview = context.contextFile.length > 50 
+        ? context.contextFile.substring(0, 50) + '...' 
+        : context.contextFile;
+      analysisContext += `\nAdditional context available: ${contextPreview}`;
+    }
+    
     const prompt = `
 Analyze if this transcript needs a response:
 "${transcript}"
 
-Context: ${context.silenceDuration}ms of silence, ${context.conversationHistory.length} previous messages
+Context: ${analysisContext}
+
+${this.buildAnalysisInstructions(context)}
 
 Return JSON: { "shouldRespond": boolean, "confidence": 0-1, "reason": "brief explanation" }
 `;
@@ -116,31 +144,84 @@ Return JSON: { "shouldRespond": boolean, "confidence": 0-1, "reason": "brief exp
     }
   }
 
+  /**
+   * Builds specific instructions for analysis based on context parameters
+   * @param context Analysis context containing role and other information
+   * @returns Instructions string for the analyzer
+   */
+  private buildAnalysisInstructions(context: AnalysisContext): string {
+    let instructions = '';
+    
+    // Add name-specific instructions
+    if (context.name && context.name.trim() !== '') {
+      instructions += `If the user directly addresses "${context.name}", increase confidence in responding.`;
+    }
+    
+    // Add generic role-based instructions
+    if (context.role && context.role.trim() !== '') {
+      instructions += `\n\nConsider the context of acting in the role of: ${context.role}`;
+      instructions += `\n\nAdjust your analysis and response confidence accordingly.`;
+    }
+    
+    // Add context file-specific instructions if available
+    if (context.contextFile && context.contextFile.trim() !== '') {
+      instructions += `\n\nUse the additional context to determine if a response is appropriate given the broader situational awareness.`;
+    }
+    
+    return instructions;
+  }
+
   private ruleBasedAnalysis(transcript: string, context: AnalysisContext): AnalysisResult {
     const hasQuestion = transcript.includes('?');
     const hasGreeting = /^(hi|hello|hey)/i.test(transcript);
     const seemsComplete = /[.!?]$/.test(transcript) || transcript.split(/\s+/).length > 10;
+    let baseConfidence = 0.0;
+    let shouldRespond = false;
+    let reason = '';
     
-    if (hasQuestion || hasGreeting) {
-      return {
-        shouldRespond: true,
-        confidence: 0.9,
-        reason: hasQuestion ? 'Question detected' : 'Greeting detected'
-      };
+    // Check for direct addressing by name
+    const isDirectlyAddressed = context.name && 
+                               context.name.trim() !== '' && 
+                               transcript.toLowerCase().includes(context.name.toLowerCase().trim());
+    
+    // Direct addressing significantly increases confidence
+    if (isDirectlyAddressed) {
+      baseConfidence += 0.3; // Substantial boost for being directly addressed
+      reason = `Directly addressed as ${context.name}`;
+      shouldRespond = true;
     }
     
+    // Standard checks
+    if (hasQuestion) {
+      baseConfidence += 0.5;
+      shouldRespond = true;
+      reason = reason ? `${reason}, question detected` : 'Question detected';
+    } else if (hasGreeting) {
+      baseConfidence += 0.4;
+      shouldRespond = true;
+      reason = reason ? `${reason}, greeting detected` : 'Greeting detected';
+    }
+    
+    // Generic role-based adjustment - just add a small boost when role is provided
+    if (context.role && context.role.trim() !== '') {
+      // Small boost for having context about the role
+      baseConfidence += 0.1;
+    }
+    
+    // Complete statement check
     if (seemsComplete && context.silenceDuration > 2000) {
-      return {
-        shouldRespond: true,
-        confidence: 0.7,
-        reason: 'Complete statement'
-      };
+      baseConfidence += 0.2;
+      shouldRespond = shouldRespond || true; // Only set true if not already set
+      reason = reason ? `${reason}, complete statement` : 'Complete statement';
     }
+    
+    // Final confidence calculation
+    const finalConfidence = Math.min(0.95, Math.max(0.1, baseConfidence)); // Clamp between 0.1 and 0.95
     
     return {
-      shouldRespond: false,
-      confidence: 0.4,
-      reason: 'Incomplete or unclear'
+      shouldRespond: shouldRespond,
+      confidence: finalConfidence,
+      reason: reason || 'Incomplete or unclear'
     };
   }
 
