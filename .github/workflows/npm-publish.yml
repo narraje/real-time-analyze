@@ -1,0 +1,82 @@
+name: NPM Package Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: 'Version type (patch, minor, major)'
+        required: false
+        default: 'patch'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed for auto-tagging version
+      packages: write  # Needed for publishing to GitHub Packages
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history and tags
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Automated version bump based on commit messages
+      - name: Automated Version Bump
+        id: version-bump
+        uses: phips28/gh-action-bump-version@master
+        with:
+          tag-prefix: 'v'
+          minor-wording: 'feat,feature,minor'
+          major-wording: 'BREAKING CHANGE,major'
+          patch-wording: 'fix,patch,docs,chore,refactor,test,style'
+          rc-wording: 'alpha,beta,rc'
+          default: ${{ github.event.inputs.version-type || 'patch' }}
+          commit-message: 'ci: version bump to {{version}} [skip ci]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org/'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build package
+        run: npm run build
+      
+      # Publish to npm registry if version changed
+      - name: Publish to npm
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+      
+      # Also publish to GitHub Packages
+      - name: Setup Node.js for GitHub Packages
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@narraje'
+      
+      - name: Publish to GitHub Packages
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          registry: 'https://npm.pkg.github.com'
