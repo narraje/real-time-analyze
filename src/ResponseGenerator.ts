@@ -1,6 +1,17 @@
 import { GeneratorConfig, Message } from './types';
 import * as fs from 'fs/promises';
 
+/**
+ * ResponseGenerator - Generates contextually appropriate responses to transcript content
+ * 
+ * Features:
+ * - Multiple AI provider support (OpenAI, Anthropic, or custom implementation)
+ * - Conversation history integration for context-aware responses
+ * - Temperature and token control for response generation
+ * - Support for name, role, and context file parameters to personalize responses
+ * - Graceful error handling with fallback responses
+ */
+
 export class ResponseGenerator {
   private config: GeneratorConfig;
 
@@ -13,6 +24,17 @@ export class ResponseGenerator {
     };
   }
 
+  /**
+   * Generates a response based on transcript content and conversation history
+   * 
+   * @param transcript - The current transcript text to respond to
+   * @param history - Array of previous messages in the conversation
+   * @param options - Additional response configuration options
+   * @param options.name - Optional name of the assistant being addressed
+   * @param options.role - Optional role to adopt when generating responses (e.g. "teacher")
+   * @param options.contextFile - Optional path to JSON file with additional context
+   * @returns Promise resolving to the generated response text
+   */
   async generate(transcript: string, history: Message[], options?: { name?: string; role?: string; contextFile?: string }): Promise<string> {
     // Use custom generator if provided
     if (this.config.customGenerator) {
