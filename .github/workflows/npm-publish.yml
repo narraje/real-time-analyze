@@ -62,21 +62,21 @@ jobs:
       
       # Publish to npm registry if version changed
       - name: Publish to npm
+        id: publish
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           access: public
       
-      # Also publish to GitHub Packages
-      - name: Setup Node.js for GitHub Packages
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@narraje'
+      # Show publish result
+      - name: Output publish result
+        if: steps.publish.outputs.type != 'none'
+        run: |
+          echo "🎉 Package was published!"
+          echo "Version: ${{ steps.publish.outputs.version }}"
+          echo "Type: ${{ steps.publish.outputs.type }}"
+          echo "Tag: ${{ steps.publish.outputs.tag }}"
       
-      - name: Publish to GitHub Packages
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          registry: 'https://npm.pkg.github.com'
+      - name: Output no publish
+        if: steps.publish.outputs.type == 'none'
+        run: echo "📦 Package was not published (no version change)"
