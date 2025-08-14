@@ -10,11 +10,56 @@ import * as fs from 'fs/promises';
  * - Temperature and token control for response generation
  * - Support for name, role, and context file parameters to personalize responses
  * - Graceful error handling with fallback responses
+ * 
+ * @example
+ * ```typescript
+ * import { ResponseGenerator } from 'transcript-monitor-agent';
+ * 
+ * const generator = new ResponseGenerator({
+ *   provider: 'openai',
+ *   apiKey: process.env.OPENAI_API_KEY,
+ *   model: 'gpt-4o',
+ *   systemPrompt: 'You are a helpful assistant.',
+ *   temperature: 0.7,
+ *   maxTokens: 150
+ * });
+ * 
+ * const response = await generator.generate(
+ *   'What is machine learning?',
+ *   conversationHistory,
+ *   { name: 'Assistant', role: 'teacher' }
+ * );
+ * 
+ * console.log('Generated response:', response);
+ * ```
  */
-
 export class ResponseGenerator {
   private config: GeneratorConfig;
 
+  /**
+   * Creates a new ResponseGenerator instance with the specified configuration.
+   * 
+   * @param config - Configuration object for the generator (optional)
+   * @param config.provider - AI provider ('openai', 'anthropic', or 'custom')
+   * @param config.apiKey - API key for AI providers
+   * @param config.model - Model name (provider-specific)
+   * @param config.systemPrompt - System prompt for AI
+   * @param config.temperature - Response creativity 0-1 (default: 0.7)
+   * @param config.maxTokens - Maximum response length (default: 150)
+   * @param config.customGenerator - Custom generator function
+   * 
+   * @example
+   * ```typescript
+   * const generator = new ResponseGenerator({
+   *   provider: 'anthropic',
+   *   apiKey: process.env.ANTHROPIC_API_KEY,
+   *   model: 'claude-3-sonnet-20240229',
+   *   systemPrompt: 'You are a helpful customer service representative.',
+   *   temperature: 0.3,
+   *   maxTokens: 200
+   * });
+   * ```
+   */
   constructor(config: GeneratorConfig = {}) {
     this.config = {
       provider: 'openai',
@@ -25,15 +70,35 @@ export class ResponseGenerator {
   }
 
   /**
-   * Generates a response based on transcript content and conversation history
+   * Generates a response based on transcript content and conversation history.
+   * This is the main method that creates contextually appropriate responses using AI.
    * 
    * @param transcript - The current transcript text to respond to
-   * @param history - Array of previous messages in the conversation
+   * @param history - Array of previous messages in the conversation for context
    * @param options - Additional response configuration options
    * @param options.name - Optional name of the assistant being addressed
-   * @param options.role - Optional role to adopt when generating responses (e.g. "teacher")
-   * @param options.contextFile - Optional path to JSON file with additional context
+   * @param options.role - Optional role to adopt when generating responses (e.g. "teacher", "support agent")
+   * @param options.contextFile - Optional path to file with additional context or direct content
    * @returns Promise resolving to the generated response text
+   * @throws {Error} If generation fails and API key is missing or invalid
+   * 
+   * @example
+   * ```typescript
+   * const response = await generator.generate(
+   *   'I need help with my order',
+   *   [
+   *     { role: 'user', content: 'Hello', timestamp: Date.now() - 5000 },
+   *     { role: 'assistant', content: 'Hi! How can I help?', timestamp: Date.now() - 4000 }
+   *   ],
+   *   {
+   *     name: 'Sarah',
+   *     role: 'customer service representative',
+   *     contextFile: 'company-policies.json'
+   *   }
+   * );
+   * 
+   * console.log('AI Response:', response);
+   * ```
    */
   async generate(transcript: string, history: Message[], options?: { name?: string; role?: string; contextFile?: string }): Promise<string> {
     // Use custom generator if provided
