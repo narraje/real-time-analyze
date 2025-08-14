@@ -11,11 +11,56 @@ import { AnalyzerConfig, AnalysisContext, AnalysisResult } from './types';
  * - Context-specific rules based on role or additional context
  * 
  * The analyzer supports multiple AI providers and can be extended with custom analysis logic.
+ * 
+ * @example
+ * ```typescript
+ * import { TranscriptAnalyzer } from 'transcript-monitor-agent';
+ * 
+ * const analyzer = new TranscriptAnalyzer({
+ *   provider: 'openai',
+ *   apiKey: process.env.OPENAI_API_KEY,
+ *   minWords: 5,
+ *   maxSilenceMs: 1500
+ * });
+ * 
+ * const result = await analyzer.analyze('Hello, can you help me?', {
+ *   transcript: 'Hello, can you help me?',
+ *   previousTranscript: '',
+ *   silenceDuration: 2000,
+ *   conversationHistory: [],
+ *   name: 'Assistant'
+ * });
+ * 
+ * console.log(result.shouldRespond); // true
+ * console.log(result.confidence);    // 0.9
+ * console.log(result.reason);        // "Question detected"
+ * ```
  */
-
 export class TranscriptAnalyzer {
   private config: AnalyzerConfig;
 
+  /**
+   * Creates a new TranscriptAnalyzer instance with the specified configuration.
+   * 
+   * @param config - Configuration object for the analyzer (optional)
+   * @param config.provider - AI provider ('openai', 'anthropic', or 'custom')
+   * @param config.apiKey - API key for AI providers
+   * @param config.model - Model name (provider-specific)
+   * @param config.minWords - Minimum word count before analysis (default: 5)
+   * @param config.maxSilenceMs - Maximum silence duration in ms (default: 1500)
+   * @param config.customAnalyzer - Custom analyzer function
+   * 
+   * @example
+   * ```typescript
+   * const analyzer = new TranscriptAnalyzer({
+   *   provider: 'openai',
+   *   apiKey: process.env.OPENAI_API_KEY,
+   *   model: 'gpt-4o-mini',
+   *   minWords: 3,
+   *   maxSilenceMs: 2000
+   * });
+   * ```
+   */
   constructor(config: AnalyzerConfig = {}) {
     this.config = {
       provider: 'openai',
@@ -26,12 +71,37 @@ export class TranscriptAnalyzer {
   }
 
   /**
-   * Analyzes transcript content to determine if a response should be generated
+   * Analyzes transcript content to determine if a response should be generated.
+   * This is the main method that evaluates the transcript against various criteria
+   * to determine whether the AI should respond.
    * 
    * @param transcript - The current transcript text to analyze
-   * @param context - Additional context for the analysis including conversation history,
-   *                  name recognition, role-specific behavior, and additional context
+   * @param context - Additional context for the analysis
+   * @param context.transcript - Current transcript text
+   * @param context.previousTranscript - Previous transcript text
+   * @param context.silenceDuration - Duration of silence in milliseconds
+   * @param context.conversationHistory - Array of previous conversation messages
+   * @param context.name - Optional monitor name for direct addressing
+   * @param context.role - Optional monitor role for contextual behavior
+   * @param context.contextFile - Optional context file path or content
    * @returns Promise resolving to an AnalysisResult with response recommendation
+   * @throws {Error} If analysis fails and no fallback is available
+   * 
+   * @example
+   * ```typescript
+   * const result = await analyzer.analyze('What time is it?', {
+   *   transcript: 'What time is it?',
+   *   previousTranscript: 'Hello',
+   *   silenceDuration: 1500,
+   *   conversationHistory: [],
+   *   name: 'Assistant',
+   *   role: 'helpful assistant'
+   * });
+   * 
+   * if (result.shouldRespond) {
+   *   console.log(`Responding with ${result.confidence * 100}% confidence: ${result.reason}`);
+   * }
+   * ```
    */
   async analyze(transcript: string, context: AnalysisContext): Promise<AnalysisResult> {
     // Basic checks
