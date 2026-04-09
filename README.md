@@ -10,26 +10,6 @@
 
 Transcript-monitor-agent is a powerful, event-driven library that provides seamless transcript monitoring coupled with intelligent response generation. It's designed to simplify real-time communication processes, making it an indispensable tool for building responsive AI assistants, chatbots, and interactive voice applications.
 
-### Key Features
-
-- 🎯 **Real-time transcript monitoring** with configurable debouncing
-- 🤖 **Multi-provider AI support** (OpenAI, Anthropic, custom implementations)
-- 📊 **Intelligent response timing** based on context analysis
-- 🔧 **Highly configurable** with extensive customization options
-- 💾 **Flexible storage backends** (memory, localStorage, custom)
-- 📝 **Event-driven architecture** for seamless integration
-- 🎭 **Role-based responses** with contextual awareness
-- 📚 **Conversation history management** with automatic cleanup
-- ⚡ **TypeScript-first** with comprehensive type definitions
-
-## Recent Updates (v1.1.1)
-
-- ✨ Added named addressing support for direct monitor interaction
-- 🎭 Introduced role-based analysis and response generation
-- 📄 Added context file support for enhanced situational awareness
-- 🔄 Improved retry mechanisms with exponential backoff
-- 🚀 Performance optimizations and memory management improvements
-- 📚 Enhanced TypeScript definitions and JSDoc documentation
 
 ## Quick Start
 
